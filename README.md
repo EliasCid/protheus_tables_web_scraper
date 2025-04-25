@@ -37,7 +37,6 @@ A web scraper built with Python to extract and structure Protheus table document
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
-- [Author](#author)
 
 ---
 
