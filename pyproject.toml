@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "protheus-web-scraper"
+version = "0.1.0"
+description = ""
+authors = ["Elias Cid <ecp1594@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+bs4 = "^0.0.2"
+requests = "^2.32.3"
+pandas = "^2.2.3"
+tqdm = "^4.67.1"
+pyarrow = "^19.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
