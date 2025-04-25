@@ -42,16 +42,16 @@ def get_links():
     response = get_content(url1)
 
     # First identify all tables available on the site
-    soup = BeautifulSoup(response.text, features="html.parser")
+    soup = BeautifulSoup(response.text, features='html.parser')
     tables = get_tables(soup)
     
     # Turn into df
-    df_tables = pd.DataFrame(tables.items(), columns=["Table", "Name"])
+    df_tables = pd.DataFrame(tables.items(), columns=['Table', 'Name'])
     
     #Get links
     url2 = 'https://terminaldeinformacao.com/wp-content/tabelas/'
     tables_ids = [key.lower() for key in tables.keys()]
-    links = [f"{url2}{id}.php" for id in tables_ids]
+    links = [f'{url2}{id}.php' for id in tables_ids]
     return links, tables, df_tables
             
 # Function to extract tables from site
@@ -82,7 +82,7 @@ def get_protheus_tables(url):
         if response.status_code != 200:
             return None
 
-        soup = BeautifulSoup(response.text, features="html.parser")
+        soup = BeautifulSoup(response.text, features='html.parser')
         table_name = soup.find('h1').text.split(' ')[1]
 
         #Fields data
@@ -100,26 +100,29 @@ def get_protheus_tables(url):
         return df_fields, df_index, df_relationships
     
     except Exception as e:
-        print(f"Error processing {url}: {e}")
+        print(f'Error processing {url}: {e}')
         return None
 
 # Scrap Protheus tables
 links, tables, df_tables = get_links()
 
 # Create folders to store intermediate results
-os.makedirs("batches/fields", exist_ok=True)
-os.makedirs("batches/index", exist_ok=True)
-os.makedirs("batches/relationships", exist_ok=True)
+os.makedirs('batches/fields', exist_ok=True)
+os.makedirs('batches/index', exist_ok=True)
+os.makedirs('batches/relationships', exist_ok=True)
 
 # Timestamp for filenames
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
+# Save df_tables
+df_tables.to_parquet(f'df_tables_{timestamp}.parquet', index=False)
 
 # Number of batches
 n_batches = 100
 batch_size = math.ceil(len(links) / n_batches)
 
 for batch_num in range(n_batches):
-    print(f"Processing batch {batch_num+1}/{n_batches}")
+    print(f'Processing batch {batch_num+1}/{n_batches}')
     
     batch_links = links[batch_num * batch_size:(batch_num + 1) * batch_size]
 
@@ -130,7 +133,7 @@ for batch_num in range(n_batches):
     with ThreadPoolExecutor(max_workers=40) as executor:
         futures = {executor.submit(get_protheus_tables, url): url for url in batch_links}
         
-        for future in tqdm(as_completed(futures), total=len(futures), desc=f"Batch {batch_num+1}"):
+        for future in tqdm(as_completed(futures), total=len(futures), desc=f'Batch {batch_num+1}'):
             result = future.result()
             if result:
                 df_fields, df_index, df_relationships = result
@@ -140,24 +143,24 @@ for batch_num in range(n_batches):
 
     # Save each batch to separate files with timestamp
     if batch_fields:
-        pd.concat(batch_fields).to_parquet(f"batches/fields/fields_batch_{batch_num}_{timestamp}.parquet", index=False)
+        pd.concat(batch_fields).to_parquet(f'batches/fields/fields_batch_{batch_num}_{timestamp}.parquet', index=False)
     if batch_index:
-        pd.concat(batch_index).to_parquet(f"batches/index/index_batch_{batch_num}_{timestamp}.parquet", index=False)
+        pd.concat(batch_index).to_parquet(f'batches/index/index_batch_{batch_num}_{timestamp}.parquet', index=False)
     if batch_relationships:
-        pd.concat(batch_relationships).to_parquet(f"batches/relationships/relationships_batch_{batch_num}_{timestamp}.parquet", index=False)
+        pd.concat(batch_relationships).to_parquet(f'batches/relationships/relationships_batch_{batch_num}_{timestamp}.parquet', index=False)
 
 # Final step: concatenate all batch results into final files
 def concatenate_parquet(folder_path):
-    files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(".parquet")]
+    files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith('.parquet')]
     return pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
 
-df_all_fields = concatenate_parquet("batches/fields")
-df_all_index = concatenate_parquet("batches/index")
-df_all_relationships = concatenate_parquet("batches/relationships")
+df_all_fields = concatenate_parquet('batches/fields')
+df_all_index = concatenate_parquet('batches/index')
+df_all_relationships = concatenate_parquet('batches/relationships')
 
 # Save final merged files with timestamp
-df_all_fields.to_parquet(f"df_all_fields_{timestamp}.parquet", index=False)
-df_all_index.to_parquet(f"df_all_index_{timestamp}.parquet", index=False)
-df_all_relationships.to_parquet(f"df_all_relationships_{timestamp}.parquet", index=False)
+df_all_fields.to_parquet(f'df_all_fields_{timestamp}.parquet', index=False)
+df_all_index.to_parquet(f'df_all_index_{timestamp}.parquet', index=False)
+df_all_relationships.to_parquet(f'df_all_relationships_{timestamp}.parquet', index=False)
 
 # %%
