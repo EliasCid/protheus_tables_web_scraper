@@ -47,7 +47,7 @@ Clone the repository and install the dependencies:
 
 ```bash
 git clone https://github.com/EliasCid/protheus_tables_web_scraper
-cd protheus-tables-scraper
+cd protheus_tables_web_scraper
 pip install poetry
 poetry install
 ```
